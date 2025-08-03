@@ -21,7 +21,7 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 检查是否为root用户（允许root运行）
+# 检查是否为root用户
 check_root() {
     if [[ $EUID -eq 0 ]]; then
         log_warn "检测到root用户运行，脚本将继续执行"
@@ -120,6 +120,33 @@ detect_log_path() {
     echo "/var/log/auth.log"
 }
 
+# 创建配置文件
+create_config() {
+    log_info "创建 fail2ban 配置文件..."
+    
+    # 获取日志路径
+    local log_path=$(detect_log_path)
+    
+    # 创建配置文件内容
+    cat > /tmp/sshd.local << 'EOF'
+[sshd]
+enabled = true
+port    = ssh
+filter  = sshd
+logpath = LOG_PATH_PLACEHOLDER
+maxretry = 5
+bantime  = 3600
+findtime = 600
+ignoreip = 127.0.0.1/8 ::1
+banaction = iptables-multiport
+EOF
+    
+    # 替换日志路径
+    sed -i "s|LOG_PATH_PLACEHOLDER|$log_path|g" /tmp/sshd.local
+    
+    log_info "配置文件已创建"
+}
+
 # 配置fail2ban
 configure_fail2ban() {
     log_info "开始配置 fail2ban..."
@@ -131,39 +158,8 @@ configure_fail2ban() {
         sudo mkdir -p /etc/fail2ban/jail.d/
     fi
     
-    # 获取脚本所在目录
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    
-    # 检查配置文件是否存在（尝试多个路径）
-    CONFIG_FILE=""
-    if [ -f "./jails/sshd.local" ]; then
-        CONFIG_FILE="./jails/sshd.local"
-    elif [ -f "$SCRIPT_DIR/jails/sshd.local" ]; then
-        CONFIG_FILE="$SCRIPT_DIR/jails/sshd.local"
-    elif [ -f "/tmp/jails/sshd.local" ]; then
-        CONFIG_FILE="/tmp/jails/sshd.local"
-    else
-        log_error "配置文件 sshd.local 不存在"
-        log_info "尝试创建默认配置文件..."
-        CONFIG_FILE=""
-    fi
-    
-    # 获取日志路径
-    local log_path=$(detect_log_path)
-    
     # 创建配置文件
-    cat > /tmp/sshd.local << EOF
-[sshd]
-enabled = true
-port    = ssh
-filter  = sshd
-logpath = $log_path
-maxretry = 5
-bantime  = 3600
-findtime = 600
-ignoreip = 127.0.0.1/8 ::1
-banaction = iptables-multiport
-EOF
+    create_config
     
     # 复制配置文件
     if [[ $EUID -eq 0 ]]; then
@@ -275,7 +271,7 @@ show_info() {
 # 主函数
 main() {
     echo "=================================="
-    echo "    fail2ban 一键安装脚本 (Root版本)"
+    echo "    fail2ban 一键安装脚本 (独立版本)"
     echo "=================================="
     echo
     

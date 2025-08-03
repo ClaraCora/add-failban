@@ -34,6 +34,12 @@ cd add-failban
 bash install_root.sh
 ```
 
+### 方法三：独立版本（推荐用于curl直接运行）
+```bash
+# 直接运行（独立版本，无需额外文件）
+bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_standalone.sh)
+```
+
 ## 配置说明
 
 安装完成后，fail2ban 将自动配置以下规则：

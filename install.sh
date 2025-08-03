@@ -120,10 +120,21 @@ configure_fail2ban() {
     # 创建本地配置目录
     sudo mkdir -p /etc/fail2ban/jail.d/
     
-    # 检查配置文件是否存在
-    if [ ! -f "./jails/sshd.local" ]; then
-        log_error "配置文件 ./jails/sshd.local 不存在"
-        exit 1
+    # 获取脚本所在目录
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # 检查配置文件是否存在（尝试多个路径）
+    CONFIG_FILE=""
+    if [ -f "./jails/sshd.local" ]; then
+        CONFIG_FILE="./jails/sshd.local"
+    elif [ -f "$SCRIPT_DIR/jails/sshd.local" ]; then
+        CONFIG_FILE="$SCRIPT_DIR/jails/sshd.local"
+    elif [ -f "/tmp/jails/sshd.local" ]; then
+        CONFIG_FILE="/tmp/jails/sshd.local"
+    else
+        log_error "配置文件 sshd.local 不存在"
+        log_info "尝试创建默认配置文件..."
+        CONFIG_FILE=""
     fi
     
     # 获取日志路径
