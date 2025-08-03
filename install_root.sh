@@ -21,20 +21,12 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 检查是否为root用户
+# 检查是否为root用户（允许root运行）
 check_root() {
     if [[ $EUID -eq 0 ]]; then
-        log_warn "检测到root用户运行，建议使用普通用户+sudo的方式"
-        # 注释掉退出，允许root用户运行
-        # exit 1
-    fi
-}
-
-# 检查sudo权限
-check_sudo() {
-    if ! sudo -n true 2>/dev/null; then
-        log_error "需要sudo权限，请确保当前用户有sudo权限"
-        exit 1
+        log_warn "检测到root用户运行，脚本将继续执行"
+    else
+        log_info "使用普通用户运行，脚本将使用sudo权限"
     fi
 }
 
@@ -71,16 +63,31 @@ install_fail2ban() {
     
     if [ -x "$(command -v apt)" ]; then
         log_info "使用 apt 包管理器"
-        sudo apt update
-        sudo apt install -y fail2ban
+        if [[ $EUID -eq 0 ]]; then
+            apt update
+            apt install -y fail2ban
+        else
+            sudo apt update
+            sudo apt install -y fail2ban
+        fi
     elif [ -x "$(command -v yum)" ]; then
         log_info "使用 yum 包管理器"
-        sudo yum install -y epel-release
-        sudo yum install -y fail2ban
+        if [[ $EUID -eq 0 ]]; then
+            yum install -y epel-release
+            yum install -y fail2ban
+        else
+            sudo yum install -y epel-release
+            sudo yum install -y fail2ban
+        fi
     elif [ -x "$(command -v dnf)" ]; then
         log_info "使用 dnf 包管理器"
-        sudo dnf install -y epel-release
-        sudo dnf install -y fail2ban
+        if [[ $EUID -eq 0 ]]; then
+            dnf install -y epel-release
+            dnf install -y fail2ban
+        else
+            sudo dnf install -y epel-release
+            sudo dnf install -y fail2ban
+        fi
     else
         log_error "不支持的 Linux 发行版。请使用 apt、yum 或 dnf。"
         exit 1
@@ -118,7 +125,11 @@ configure_fail2ban() {
     log_info "开始配置 fail2ban..."
     
     # 创建本地配置目录
-    sudo mkdir -p /etc/fail2ban/jail.d/
+    if [[ $EUID -eq 0 ]]; then
+        mkdir -p /etc/fail2ban/jail.d/
+    else
+        sudo mkdir -p /etc/fail2ban/jail.d/
+    fi
     
     # 检查配置文件是否存在
     if [ ! -f "./jails/sshd.local" ]; then
@@ -140,10 +151,15 @@ maxretry = 5
 bantime  = 3600
 findtime = 600
 ignoreip = 127.0.0.1/8 ::1
+banaction = iptables-multiport
 EOF
     
     # 复制配置文件
-    sudo cp /tmp/sshd.local /etc/fail2ban/jail.d/sshd.local
+    if [[ $EUID -eq 0 ]]; then
+        cp /tmp/sshd.local /etc/fail2ban/jail.d/sshd.local
+    else
+        sudo cp /tmp/sshd.local /etc/fail2ban/jail.d/sshd.local
+    fi
     rm -f /tmp/sshd.local
     
     log_info "配置文件已创建: /etc/fail2ban/jail.d/sshd.local"
@@ -154,19 +170,34 @@ start_service() {
     log_info "启动 fail2ban 服务..."
     
     # 启动服务
-    sudo systemctl enable fail2ban
-    sudo systemctl restart fail2ban
+    if [[ $EUID -eq 0 ]]; then
+        systemctl enable fail2ban
+        systemctl restart fail2ban
+    else
+        sudo systemctl enable fail2ban
+        sudo systemctl restart fail2ban
+    fi
     
     # 等待服务启动
     sleep 3
     
     # 检查服务状态
-    if sudo systemctl is-active --quiet fail2ban; then
-        log_info "fail2ban 服务启动成功"
+    if [[ $EUID -eq 0 ]]; then
+        if systemctl is-active --quiet fail2ban; then
+            log_info "fail2ban 服务启动成功"
+        else
+            log_error "fail2ban 服务启动失败"
+            systemctl status fail2ban
+            exit 1
+        fi
     else
-        log_error "fail2ban 服务启动失败"
-        sudo systemctl status fail2ban
-        exit 1
+        if sudo systemctl is-active --quiet fail2ban; then
+            log_info "fail2ban 服务启动成功"
+        else
+            log_error "fail2ban 服务启动失败"
+            sudo systemctl status fail2ban
+            exit 1
+        fi
     fi
 }
 
@@ -175,18 +206,34 @@ verify_config() {
     log_info "验证配置..."
     
     # 检查fail2ban状态
-    if sudo fail2ban-client status > /dev/null 2>&1; then
-        log_info "fail2ban 运行正常"
+    if [[ $EUID -eq 0 ]]; then
+        if fail2ban-client status > /dev/null 2>&1; then
+            log_info "fail2ban 运行正常"
+        else
+            log_error "fail2ban 运行异常"
+            exit 1
+        fi
+        
+        # 检查SSH监狱状态
+        if fail2ban-client status sshd > /dev/null 2>&1; then
+            log_info "SSH 防护已启用"
+        else
+            log_warn "SSH 防护可能未正确配置"
+        fi
     else
-        log_error "fail2ban 运行异常"
-        exit 1
-    fi
-    
-    # 检查SSH监狱状态
-    if sudo fail2ban-client status sshd > /dev/null 2>&1; then
-        log_info "SSH 防护已启用"
-    else
-        log_warn "SSH 防护可能未正确配置"
+        if sudo fail2ban-client status > /dev/null 2>&1; then
+            log_info "fail2ban 运行正常"
+        else
+            log_error "fail2ban 运行异常"
+            exit 1
+        fi
+        
+        # 检查SSH监狱状态
+        if sudo fail2ban-client status sshd > /dev/null 2>&1; then
+            log_info "SSH 防护已启用"
+        else
+            log_warn "SSH 防护可能未正确配置"
+        fi
     fi
 }
 
@@ -196,10 +243,17 @@ show_info() {
     log_info "=== fail2ban 安装完成 ==="
     echo
     echo "常用命令："
-    echo "  查看状态: sudo fail2ban-client status"
-    echo "  查看SSH监狱: sudo fail2ban-client status sshd"
-    echo "  查看日志: sudo tail -f /var/log/fail2ban.log"
-    echo "  解封IP: sudo fail2ban-client set sshd unbanip <IP地址>"
+    if [[ $EUID -eq 0 ]]; then
+        echo "  查看状态: fail2ban-client status"
+        echo "  查看SSH监狱: fail2ban-client status sshd"
+        echo "  查看日志: tail -f /var/log/fail2ban.log"
+        echo "  解封IP: fail2ban-client set sshd unbanip <IP地址>"
+    else
+        echo "  查看状态: sudo fail2ban-client status"
+        echo "  查看SSH监狱: sudo fail2ban-client status sshd"
+        echo "  查看日志: sudo tail -f /var/log/fail2ban.log"
+        echo "  解封IP: sudo fail2ban-client set sshd unbanip <IP地址>"
+    fi
     echo
     echo "配置文件位置："
     echo "  /etc/fail2ban/jail.d/sshd.local"
@@ -210,12 +264,11 @@ show_info() {
 # 主函数
 main() {
     echo "=================================="
-    echo "    fail2ban 一键安装脚本"
+    echo "    fail2ban 一键安装脚本 (Root版本)"
     echo "=================================="
     echo
     
     check_root
-    check_sudo
     detect_system
     install_fail2ban
     configure_fail2ban
@@ -225,4 +278,4 @@ main() {
 }
 
 # 运行主函数
-main "$@"
+main "$@" 
