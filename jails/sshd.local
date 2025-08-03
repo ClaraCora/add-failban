@@ -1,0 +1,10 @@
+[sshd]
+enabled = true
+port    = ssh
+filter  = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+bantime  = 3600
+findtime = 600
+ignoreip = 127.0.0.1/8 ::1
+banaction = iptables-multiport

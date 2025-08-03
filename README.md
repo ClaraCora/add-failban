@@ -1,0 +1,69 @@
+# fail2ban-installer
+
+这是一个快速为 Linux VPS 安装并配置 fail2ban 的一键脚本。
+
+## 功能特性
+
+- 🚀 一键安装 fail2ban
+- 🔧 自动配置 SSH 防护规则
+- 🛡️ 防止暴力破解攻击
+- 📊 支持多种 Linux 发行版 (Ubuntu/Debian/CentOS/RHEL)
+- ⚡ 自动启动并设置开机自启
+
+## 使用方法
+
+### 方法一：直接运行（推荐）
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install.sh)
+```
+
+### 方法二：下载后运行
+```bash
+git clone https://github.com/ClaraCora/add-failban.git
+cd add-failban
+sudo bash install.sh
+```
+
+## 配置说明
+
+安装完成后，fail2ban 将自动配置以下规则：
+
+- **SSH 防护**：5次失败登录后封禁1小时
+- **检测时间**：10分钟内
+- **封禁时间**：1小时
+
+## 常用命令
+
+```bash
+# 查看 fail2ban 状态
+sudo fail2ban-client status
+
+# 查看 SSH 监狱状态
+sudo fail2ban-client status sshd
+
+# 查看日志
+sudo tail -f /var/log/fail2ban.log
+
+# 手动解封 IP
+sudo fail2ban-client set sshd unbanip <IP地址>
+
+# 测试配置（需要先安装fail2ban）
+sudo bash test_config.sh
+```
+
+## 支持的发行版
+
+- Ubuntu 18.04+
+- Debian 9+
+- CentOS 7+
+- RHEL 7+
+
+## 注意事项
+
+1. 请确保您有 sudo 权限
+2. 建议在安装前备份重要数据
+3. 安装后请测试 SSH 连接是否正常
+
+## 许可证
+
+MIT License
