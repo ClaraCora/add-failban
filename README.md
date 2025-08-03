@@ -12,16 +12,26 @@
 
 ## 使用方法
 
-### 方法一：直接运行（推荐）
+### 方法一：使用普通用户运行（推荐）
 ```bash
+# 直接运行
 bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install.sh)
-```
 
-### 方法二：下载后运行
-```bash
+# 或下载后运行
 git clone https://github.com/ClaraCora/add-failban.git
 cd add-failban
 sudo bash install.sh
+```
+
+### 方法二：使用root用户运行
+```bash
+# 直接运行（root版本）
+bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_root.sh)
+
+# 或下载后运行
+git clone https://github.com/ClaraCora/add-failban.git
+cd add-failban
+bash install_root.sh
 ```
 
 ## 配置说明
