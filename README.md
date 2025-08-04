@@ -14,7 +14,15 @@
 
 ## 使用方法
 
-### 方法一：使用普通用户运行（推荐）
+### 🚀 一键安装（最推荐）
+```bash
+# 独立版本 - 完全非交互式，无需额外文件
+bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_standalone.sh)
+```
+
+### 📦 其他安装方式
+
+#### 方法一：使用普通用户运行
 ```bash
 # 直接运行
 bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install.sh)
@@ -25,7 +33,7 @@ cd add-failban
 sudo bash install.sh
 ```
 
-### 方法二：使用root用户运行
+#### 方法二：使用root用户运行
 ```bash
 # 直接运行（root版本）
 bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_root.sh)
@@ -36,12 +44,6 @@ cd add-failban
 bash install_root.sh
 ```
 
-### 方法三：独立版本（推荐用于curl直接运行）
-```bash
-# 直接运行（独立版本，无需额外文件）
-bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_standalone.sh)
-```
-
 ## 配置说明
 
 安装完成后，fail2ban 将自动配置以下规则：
@@ -49,6 +51,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/i
 - **SSH 防护**：5次失败登录后封禁1小时
 - **检测时间**：10分钟内
 - **封禁时间**：1小时
+
+## 非交互式安装特性
+
+✅ **完全自动化**：无需任何人工干预
+✅ **自动处理冲突**：自动解决配置文件冲突
+✅ **预设配置**：自动预设所有fail2ban配置选项
+✅ **静默安装**：减少不必要的输出信息
+✅ **错误处理**：完善的错误检测和处理机制
 
 ## 常用命令
 
@@ -81,6 +91,8 @@ sudo bash test_config.sh
 1. 请确保您有 sudo 权限
 2. 建议在安装前备份重要数据
 3. 安装后请测试 SSH 连接是否正常
+4. 脚本会自动处理所有交互式提示，无需手动干预
+5. 如果系统中已存在fail2ban配置，脚本会自动处理冲突
 
 ## 许可证
 
