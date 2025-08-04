@@ -89,6 +89,7 @@ install_fail2ban() {
             echo "fail2ban fail2ban/banaction_sshd select iptables-multiport" | sudo debconf-set-selections
             sudo apt install -y -q fail2ban
         fi
+        fi
     elif [ -x "$(command -v yum)" ]; then
         log_info "使用 yum 包管理器"
         if [[ $EUID -eq 0 ]]; then
