@@ -71,8 +71,20 @@ install_fail2ban() {
     
     if [ -x "$(command -v apt)" ]; then
         log_info "使用 apt 包管理器"
-        sudo apt update
-        sudo apt install -y fail2ban
+        
+        # 设置环境变量以自动处理交互式提示
+        export DEBIAN_FRONTEND=noninteractive
+        export DEBCONF_NONINTERACTIVE_SEEN=true
+        
+        # 使用 -y 和 -q 参数，并设置环境变量
+        sudo apt update -y -q
+        # 使用 debconf-set-selections 预设配置
+        echo "fail2ban fail2ban/banaction select iptables-multiport" | sudo debconf-set-selections
+        echo "fail2ban fail2ban/banaction_ssh select iptables-multiport" | sudo debconf-set-selections
+        echo "fail2ban fail2ban/banaction_apache select iptables-multiport" | sudo debconf-set-selections
+        echo "fail2ban fail2ban/banaction_nginx select iptables-multiport" | sudo debconf-set-selections
+        echo "fail2ban fail2ban/banaction_sshd select iptables-multiport" | sudo debconf-set-selections
+        sudo apt install -y -q fail2ban
     elif [ -x "$(command -v yum)" ]; then
         log_info "使用 yum 包管理器"
         sudo yum install -y epel-release
@@ -120,10 +132,21 @@ configure_fail2ban() {
     # 创建本地配置目录
     sudo mkdir -p /etc/fail2ban/jail.d/
     
-    # 检查配置文件是否存在
-    if [ ! -f "./jails/sshd.local" ]; then
-        log_error "配置文件 ./jails/sshd.local 不存在"
-        exit 1
+    # 获取脚本所在目录
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # 检查配置文件是否存在（尝试多个路径）
+    CONFIG_FILE=""
+    if [ -f "./jails/sshd.local" ]; then
+        CONFIG_FILE="./jails/sshd.local"
+    elif [ -f "$SCRIPT_DIR/jails/sshd.local" ]; then
+        CONFIG_FILE="$SCRIPT_DIR/jails/sshd.local"
+    elif [ -f "/tmp/jails/sshd.local" ]; then
+        CONFIG_FILE="/tmp/jails/sshd.local"
+    else
+        log_error "配置文件 sshd.local 不存在"
+        log_info "尝试创建默认配置文件..."
+        CONFIG_FILE=""
     fi
     
     # 获取日志路径

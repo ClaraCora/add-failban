@@ -9,6 +9,8 @@
 - 🛡️ 防止暴力破解攻击
 - 📊 支持多种 Linux 发行版 (Ubuntu/Debian/CentOS/RHEL)
 - ⚡ 自动启动并设置开机自启
+- 🤖 完全非交互式安装，无需人工干预
+- 🔒 自动处理配置文件冲突
 
 ## 使用方法
 
@@ -32,6 +34,12 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/i
 git clone https://github.com/ClaraCora/add-failban.git
 cd add-failban
 bash install_root.sh
+```
+
+### 方法三：独立版本（推荐用于curl直接运行）
+```bash
+# 直接运行（独立版本，无需额外文件）
+bash <(curl -fsSL https://raw.githubusercontent.com/ClaraCora/add-failban/main/install_standalone.sh)
 ```
 
 ## 配置说明
