@@ -86,6 +86,21 @@ sudo bash test_config.sh
 - CentOS 7+
 - RHEL 7+
 
+## 更新日志
+
+### v1.1.0 (2024-12-19)
+- 🔧 **修复语法错误**：修复了安装脚本中的语法错误问题
+  - 修复 `install_root.sh` 第91行多余的 `fi` 语句
+  - 修复 `install_standalone.sh` 第139行多余的 `fi` 语句
+  - 解决了 `/dev/fd/63: line 93: syntax error near unexpected token 'elif'` 错误
+- ✨ **新增功能**：添加了 `auto_commit.sh` 自动提交脚本
+- 🐛 **稳定性提升**：所有脚本现在都通过了语法检查
+
+### v1.0.0
+- 🚀 初始版本发布
+- 支持一键安装 fail2ban
+- 自动配置 SSH 防护规则
+
 ## 注意事项
 
 1. 请确保您有 sudo 权限
@@ -93,6 +108,7 @@ sudo bash test_config.sh
 3. 安装后请测试 SSH 连接是否正常
 4. 脚本会自动处理所有交互式提示，无需手动干预
 5. 如果系统中已存在fail2ban配置，脚本会自动处理冲突
+6. **重要**：v1.1.0 修复了之前的语法错误，现在可以正常使用一键安装命令
 
 ## 许可证
 
