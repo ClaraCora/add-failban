@@ -135,7 +135,6 @@ install_fail2ban() {
             # 强制安装，忽略所有交互式提示
             sudo apt install -y -q -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" fail2ban
         fi
-        fi
     elif [ -x "$(command -v yum)" ]; then
         log_info "使用 yum 包管理器"
         if [[ $EUID -eq 0 ]]; then
